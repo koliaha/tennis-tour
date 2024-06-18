@@ -1,40 +1,31 @@
 <template>
   <v-container>
-    <v-tabs v-model="activeTab" background-color="primary" dark>
+    <v-tabs v-model="activeTab" dark>
       <v-tab>
-        <v-icon left>mdi-tournament</v-icon>
+        <v-icon left>mdi-trophy</v-icon>
         Основной турнир (ОТ)
       </v-tab>
       <v-tab>
-        <v-icon left>mdi-tournament</v-icon>
+        <v-icon left>mdi-account-group</v-icon>
         Отборочный этап (ОЭ)
       </v-tab>
       <v-tab>
-        <v-icon left>mdi-tournament</v-icon>
+        <v-icon left>mdi-clock-outline</v-icon>
         Ожидающие игроки (ОЖ)
       </v-tab>
     </v-tabs>
 
     <v-tabs-items v-model="activeTab">
       <v-tab-item>
-        <TournamentTable
-          :players="mainTournamentPlayers"
-          title="Основной турнир (ОТ)"
-        />
+        <TournamentTable :players="mainTournamentPlayers" title="Основной турнир (ОТ)" />
       </v-tab-item>
 
       <v-tab-item>
-        <TournamentTable
-          :players="qualifyingStagePlayers"
-          title="Отборочный этап (ОЭ)"
-        />
+        <TournamentTable :players="qualifyingStagePlayers" title="Отборочный этап (ОЭ)" />
       </v-tab-item>
 
       <v-tab-item>
-        <TournamentTable
-          :players="waitingPlayers"
-          title="Ожидающие игроки (ОЖ)"
-        />
+        <TournamentTable :players="waitingPlayers" title="Ожидающие игроки (ОЖ)" />
       </v-tab-item>
     </v-tabs-items>
   </v-container>

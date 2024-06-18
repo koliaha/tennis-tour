@@ -1,12 +1,13 @@
 <template>
   <v-card>
-    <v-card-title>
+    <div class="filters">
       <v-text-field
         v-model="search"
         label="Поиск"
         class="mx-4"
         clearable
         append-icon="mdi-magnify"
+        @click:clear="resetFilters"
       ></v-text-field>
       <v-select
         v-model="filter.pay_member"
@@ -15,6 +16,7 @@
         class="mx-4"
         clearable
         append-icon="mdi-cash"
+        @click:clear="resetFilters"
       ></v-select>
       <v-text-field
         v-model="filter.comment"
@@ -22,29 +24,57 @@
         class="mx-4"
         clearable
         append-icon="mdi-comment-text-outline"
+        @click:clear="resetFilters"
       ></v-text-field>
-      <v-text-field
-        v-model="filter.join_date"
-        label="Дата заявки"
-        class="mx-4"
-        clearable
-        append-icon="mdi-calendar"
-      ></v-text-field>
-    </v-card-title>
+      <v-menu
+        ref="menu"
+        v-model="menu"
+        :close-on-content-click="false"
+        :nudge-right="40"
+        transition="scale-transition"
+        offset-y
+        min-width="290px"
+        max-width="290px"
+        style="z-index: 1"
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <v-text-field
+            v-model="dateRange"
+            label="Диапазон дат заявки"
+            class="mx-4"
+            readonly
+            v-bind="attrs"
+            v-on="on"
+            clearable
+            append-icon="mdi-calendar"
+            @click:clear="resetFilters"
+          ></v-text-field>
+        </template>
+        <v-date-picker
+          v-model="filter.join_date"
+          range
+          @change="updateDateRange"
+        ></v-date-picker>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text color="primary" @click="menu = false">OK</v-btn>
+        </v-card-actions>
+      </v-menu>
+    </div>
     <v-data-table
       :headers="headers"
       :items="filteredPlayers"
-      class="elevation-1"
+      class="elevation-1 "
       :sort-by="sortBy"
       :sort-desc="sortDesc"
       :item-class="itemClass"
       hide-default-footer
       :items-per-page="filteredPlayers.length"
     >
-      <template v-slot:[`top`]="{}">
+      <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>{{ title }}</v-toolbar-title>
-          <v-divider class="mx-4" inset vertical></v-divider>
+          <!-- <v-spacer></v-spacer> -->
         </v-toolbar>
       </template>
       <template v-slot:[`item.birth_date`]="{ item }">
@@ -58,7 +88,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
+import { Component, Vue, Prop, Watch } from 'vue-property-decorator'
 import { Player } from '@/types/interfaces'
 
 @Component
@@ -70,8 +100,11 @@ export default class TournamentTable extends Vue {
   public filter = {
     comment: '',
     pay_member: '',
-    join_date: ''
+    join_date: []
   };
+
+  public menu = false; // Для календаря
+  public dateRange = '';
 
   public sortBy = 'pay_member';
   public sortDesc = false;
@@ -95,18 +128,22 @@ export default class TournamentTable extends Vue {
 
   get filteredPlayers (): Player[] {
     return this.players.filter((player) => {
-      return (
-        (this.filter.comment
-          ? player.comment?.includes(this.filter.comment)
-          : true) &&
-        (this.filter.pay_member
-          ? player.pay_member === this.filter.pay_member
-          : true) &&
-        (this.filter.join_date
-          ? player.join_date?.includes(this.filter.join_date)
-          : true) &&
-        (this.search ? player.name?.includes(this.search) : true)
-      )
+      const nameMatch = player.name
+        .toLowerCase()
+        .includes(this.search.toLowerCase())
+      const commentMatch = this.filter.comment
+        ? player.comment
+          ?.toLowerCase()
+          .includes(this.filter.comment.toLowerCase())
+        : true
+      const payMemberMatch = this.filter.pay_member
+        ? player.pay_member === this.filter.pay_member
+        : true
+      const joinDateMatch = this.filter.join_date.length
+        ? player.join_date >= this.filter.join_date[0] &&
+          player.join_date <= this.filter.join_date[1]
+        : true
+      return nameMatch && commentMatch && payMemberMatch && joinDateMatch
     })
   }
 
@@ -119,47 +156,38 @@ export default class TournamentTable extends Vue {
     const [year, month, day] = date.split('-')
     return `${day}.${month}.${year}`
   }
+
+  updateDateRange () {
+    if (this.filter.join_date.length === 2) {
+      const [start, end] = this.filter.join_date.map((date) =>
+        this.formatDate(date)
+      )
+      this.dateRange = `${start} - ${end}`
+    } else {
+      this.dateRange = ''
+    }
+  }
+
+  resetFilters () {
+    this.search = ''
+    this.filter = {
+      comment: '',
+      pay_member: '',
+      join_date: []
+    }
+    this.dateRange = ''
+  }
+
+  @Watch('search')
+  @Watch('filter.comment')
+  @Watch('filter.pay_member')
+  @Watch('filter.join_date')
+  onFilterChange () {
+    this.$forceUpdate()
+  }
 }
 </script>
 
 <style scoped>
-.v-data-table {
-  width: 100%;
-  margin-top: 16px;
-}
 
-.v-card-title {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.v-text-field,
-.v-select {
-  flex: 1 1 auto;
-  margin: 8px;
-  max-width: 220px;
-}
-
-.v-toolbar-title {
-  font-weight: bold;
-  font-size: 1.25rem;
-}
-
-.no-pay {
-  background-color: #ffcccc !important;
-}
-
-@media (max-width: 600px) {
-  .v-card-title {
-    flex-direction: column;
-  }
-
-  .v-text-field,
-  .v-select {
-    max-width: 100%;
-    margin: 4px 0;
-  }
-}
 </style>
