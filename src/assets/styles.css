@@ -4,7 +4,7 @@ body {
   padding: 0;
   font-family: "Roboto", sans-serif;
 }
-.container{
+.container {
   padding: 0;
   max-width: 95%;
 }
@@ -36,7 +36,9 @@ body {
 .v-toolbar {
   flex-wrap: nowrap;
 }
-
+.menuable__content__active {
+  background: white;
+}
 .v-toolbar-title {
   font-weight: bold;
   font-size: 1.25rem;

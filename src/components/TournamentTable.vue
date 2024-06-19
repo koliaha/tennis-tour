@@ -103,7 +103,7 @@ export default class TournamentTable extends Vue {
     join_date: []
   };
 
-  public menu = false; // Для календаря
+  public menu = false;
   public dateRange = '';
 
   public sortBy = 'pay_member';
@@ -187,7 +187,3 @@ export default class TournamentTable extends Vue {
   }
 }
 </script>
-
-<style scoped>
-
-</style>
